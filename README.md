@@ -1,7 +1,5 @@
 # rabbitVE
-```text
-[![996.ICU](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu) 
-```
+[![Badge](https://img.shields.io/badge/link-996.icu-%23FF4D5B.svg?style=flat-square)](https://996.icu/#/en_US)
 
 English Description:
 
@@ -32,6 +30,15 @@ Demo：
 视频： [bilibili](https://www.bilibili.com/video/av53132715)  《超新星全运会》 2018.11.11期 杨超越单人cut
 
 原视频：《超新星全运会》 2018.11.11期
+
+## 项目依赖
+
+- python 3.6+
+- opencv 3.3+
+- dlib
+- scipy
+- ffmpeg
+- moviepy
 
 ### 文件介绍
 

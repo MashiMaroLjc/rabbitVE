@@ -48,7 +48,7 @@ def get_worker(model, compare_tool, max_v, total_frame_num, fps, no_strict, stri
         frame, frame_count = image_q.get()
         last_frame = None
         while frame_count > -1:
-            print(" # Deal {}/{} frame.... ".format(frame_count, total_frame_num))
+            print(">>> Deal {}/{} frame.... ".format(frame_count, total_frame_num))
             _, bboxes = detect_face(frame.copy(), model, max_v)
             # _, bboxes = model.detecte(frame)
             if len(bboxes) > 0:
@@ -58,7 +58,7 @@ def get_worker(model, compare_tool, max_v, total_frame_num, fps, no_strict, stri
                     face_list.append(face_cut)
                 has_target_face, score = compare_tool.compare(face_list)
                 if cur_index[0] == -1 and has_target_face:
-                    print("# Find a target Face .... ")
+                    print(">>> Find a target Face .... ")
                     if debug:
                         bboxes = np.array(bboxes)
                         for (top, right, bottom, left), s in zip(bboxes, score):
@@ -133,13 +133,13 @@ if __name__ == "__main__":
     if args.debug and (not os.path.exists("./test/target_face/")):
         os.makedirs("./test/target_face/", exist_ok=True)
     if args.d == "cvdnn":
-        print("# Use CVDNN threshold.{}".format(args.tf))
+        print(">>> Use CVDNN threshold.{}".format(args.tf))
         model = face_detection.FaceDetection(
             ('./model/deploy.prototxt', './model/res10_300x300_ssd_iter_140000_fp16.caffemodel'),
             conf_threshold=args.tf,
             model="cvdnn")
     else:
-        print("# Use {} threshold.{}".format(args.d.upper(), args.tf))
+        print(">>> Use {} threshold.{}".format(args.d.upper(), args.tf))
         model = face_detection.FaceDetection(None, conf_threshold=args.tf,
                                              model=args.d)
     if args.smt == "dlib":
@@ -151,19 +151,19 @@ if __name__ == "__main__":
                                                 encode_path=encode_path,
                                                 conf_threshold=args.tc)
     else:
-        raise ValueError("Not support the similarity measure type for now")
+        raise ValueError(">>> Not support the similarity measure type for now")
     videoCapture = cv2.VideoCapture(args.path)
     total_frame_num = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = videoCapture.get(cv2.CAP_PROP_FPS)
-    print("fps", fps)
-
+    print(">>> fps", fps)
+    print(">>> use strict :{}".format(args.no_strict == False))
     t1 = threading.Thread(target=get_reader(videoCapture, args.per_frame))
     t1.start()
     t2 = threading.Thread(
         target=get_worker(model, compare_tool, max_v, total_frame_num, fps, args.no_strict, args.ts, args.debug))
     t2.start()
     t2.join()  # 主线程等待t2结束
-    print("Finish Deal.")
+    print(">>> Finish Deal.")
     cut_index = result_q.get()
     finall_index = []  # 合并cutindex
 
@@ -188,3 +188,4 @@ if __name__ == "__main__":
         print(command_inp)
         process = subprocess.Popen(command_inp)
         process.wait()
+    print(">>> Done.")    
