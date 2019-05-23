@@ -1,0 +1,27 @@
+---
+
+geometry: "640x720"
+max_size: 1280
+face_threshold: 0.5
+face_similar_threshold: 0.33
+shear_frequency: 10
+face_database: "./face"
+retain_frame_check:
+  - "hist"
+  - "none"
+retain_frame_check_threshold: 0.3
+detector_type:
+  - "cvdnn"
+  - "dlib_cnn"
+  - "dlib_hog"
+
+#combine_frame_second: 10
+
+smiliar_measure_method:
+  - "dlib"
+
+
+sort_type:
+  - "none"
+  - "hist"
+
