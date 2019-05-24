@@ -48,7 +48,7 @@ class GUI:
         self.title_label = tk.Label(self.window, text="RabbitVE", font=(None, 17))
         self.title_label.place(x=0, y=0)
         menu0 = tk.Menu(self.window)  # 参数是父级控件
-        for x, func in zip(['Extract', 'Clip', 'Merge', 'ProcessorPlugins'],
+        for x, func in zip(['Extract', 'Clip', 'Merge', 'Plugins'],
                            [self.extract_view,
                             self.clip_view,
                             self.merge_view,

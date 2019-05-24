@@ -187,9 +187,9 @@ class ClipView:
             self.label_face_["text"] = self.face_dir
 
     def run_video_clip(self):
-        # if self.output_dir is None or self.input_filename is None:
-        #     messagebox.showerror("Error", "please complete the params choice.")
-        #     return
+        if self.output_dir is None or self.input_filename is None:
+            messagebox.showerror("Error", "please complete the params choice.")
+            return
         params = {
             "input": self.input_filename,
             "output": self.output_dir,

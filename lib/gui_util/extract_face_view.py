@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilenames, askdirectory
 from tkinter import ttk
 
-
 import tkinter as tk
 from tkinter.filedialog import askopenfilenames, askdirectory
 from tkinter import ttk
@@ -19,10 +18,9 @@ from .process_view import _ProcessView
 class ExtractFaceProcess(_ProcessView):
     # 显示进度的子窗口
     def __init__(self, window, control_button, params):
-        super(ExtractFaceProcess, self).__init__(window, control_button, params,"")
+        super(ExtractFaceProcess, self).__init__(window, control_button, params, "Extract..")
 
     def _work(self):
-
         max_v = int(self.params['max_size'])
         out_dir = self.params['output']
         detector_type = self.params['detector_type']

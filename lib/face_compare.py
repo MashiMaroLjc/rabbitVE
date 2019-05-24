@@ -9,12 +9,12 @@ class FaceCompare:
     def __init__(self, path, known_img_path, encode_path=None, conf_threshold=0.5, model='dlib', gui=None):
         if model not in ["dlib"]:
             raise ValueError("Not support model for now")
-        img_path = [x.path for x in os.scandir(known_img_path) if
-                    x.path.endswith("jpg") or x.path.endswith("png") or x.path.endswith("jpeg")]
         self.model = compare_dict[model](conf_threshold)
         self.model.load_model(path)
         img_list = []
         if encode_path is None:
+            img_path = [x.path for x in os.scandir(known_img_path) if
+                        x.path.endswith("jpg") or x.path.endswith("png") or x.path.endswith("jpeg")]
             for i, p in enumerate(img_path):
                 if gui is None:
                     print("preprocess img ", p)

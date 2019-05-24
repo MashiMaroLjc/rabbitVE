@@ -57,7 +57,7 @@ class _ProcessView(tk.Toplevel):
         while self.is_run:
             if self.total_size < 1:
                 continue  # 避免线程过早启动时，total size 为0
-            self.number_label["text"] = "{}/{}".format(self.curr,int(self.total_size))
+            self.number_label["text"] = "{}/{}".format(self.curr, int(self.total_size))
             n = int(self.curr / self.total_size * self.canvas_width)
             self.canvas.coords(fill_line, (0, 0, n, 30))
             # time.sleep(0.1)  # 不需要频繁修改UI
