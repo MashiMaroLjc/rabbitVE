@@ -1,5 +1,5 @@
 # RabbitVE  :rabbit2:
- ![Badge](https://img.shields.io/badge/-rabbitVE-blue.svg?style=flat-square)![Badge](https://img.shields.io/badge/-VideoEdit-green.svg?style=flat-square)[![Badge](https://img.shields.io/badge/link-996.icu-%23FF4D5B.svg?style=flat-square)](https://996.icu/#/en_US)
+ ![Badge](https://img.shields.io/badge/-rabbitVE-blue.svg?style=flat-square)![Badge](https://img.shields.io/badge/License-GPT3.0-green.svg?style=flat-square)![Badge](https://img.shields.io/badge/AI-VideoEdit-yellow.svg?style=flat-square)[![Badge](https://img.shields.io/badge/link-996.icu-%23FF4D5B.svg?style=flat-square)](https://996.icu/#/en_US)
 =======
 
 
@@ -36,7 +36,7 @@ rabbitVE是一个意图使用AI技术进行视频编辑的软件，目前还在�
 
 ### :yum:News
 
-| Data      | Update                                                  |
+| Date      | Update                                                  |
 | :-------- | ------------------------------------------------------- |
 | 2019.5.24 | 增加插件机制，自动绘制GUI，及提供卡通化插件，使用说明等 |
 | 2019.5.23 | 增加GUI界面及改变代码结构                               |
