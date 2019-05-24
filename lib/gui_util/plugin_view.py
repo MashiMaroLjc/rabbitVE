@@ -62,6 +62,17 @@ class PluginProcessView(_ProcessView):
             if x.path.endswith(".png"):
                 os.remove(x.path)
 
+    def on_closing(self):
+        self.is_run = False
+        if os.path.exists("./UserData/temp/temp_video.mp4"):
+            os.remove("./UserData/temp/temp_video.mp4")
+        if os.path.exists("./UserData/temp/temp.mp3"):
+            os.remove("./UserData/temp/temp.mp3")
+        for x in os.scandir("./UserData/temp/"):
+            if x.path.endswith(".png"):
+                os.remove(x.path)
+        super(PluginProcessView, self).on_closing()
+
 
 class PluginParmaView(tk.Toplevel):
     def __init__(self, window, render_info, geometry, plugin: BasePlugin, input_path, output_path):
@@ -87,6 +98,11 @@ class PluginParmaView(tk.Toplevel):
                     value = int(value)
                 elif v[1] == param_type.FLOAT:
                     value = float(value)
+                params[k] = value
+            elif isinstance(v[0], tk.IntVar):
+                value = v[0].get()
+                if v[1] == param_type.BOOLEAN:
+                    value = (value == 1)
                 params[k] = value
         return params
 
@@ -115,14 +131,37 @@ class PluginParmaView(tk.Toplevel):
         if default:
             text.insert("end", str(default))
 
+    def render_boolearn(self, info):
+        y = (len(self.register_params) + 1) * 40
+        self.y_ = y + 40
+        name = info["name"]
+        label = tk.Label(self, text=name.replace("_", " ") + " :", font=(None, 10))
+        label.place(x=0, y=y)
+
+        check = tk.IntVar()
+        check_button = tk.Checkbutton(self, text="{} ?".format(name),
+                                      variable=check, onvalue=1, offvalue=0,
+                                      height=4, width=10, font=(None, 10))
+        x = len(name) * 10
+        check_button.place(x=x, y=y - 20)
+        if info["default"]:
+            check.set(1)
+        else:
+            check.set(0)
+        self.register_params[name] = (check, info["type"])
+
     def _render(self, render_info):
         for info in render_info:
             type_ = info["type"]
             if type_ == param_type.INT or type_ == param_type.FLOAT:
                 self.render_number(info)
+            if type_ == param_type.BOOLEAN:
+                self.render_boolearn(info)
         self.button = tk.Button(self, text="Run", command=self.run)
         # button.bind("<Button-1>", func=run_extract_face)  # 1 左键 2 中 3 右
         self.button.place(x=420, y=self.y_ + 40, width=200)
+
+
 
 
 class PluginView:
