@@ -19,10 +19,7 @@ class Cartoonlization(BasePlugin):
         self.C = params["C"]
 
     def render_info(self):
-        """
-        #  list item(dict) 的key（可选） name type option default
-        :return: a class extend tk.Toplevel  or list
-        """
+
         need2render = list()
         need2render.append({
             "name": "Num_Down",

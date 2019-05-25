@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter.filedialog import askopenfilename, askdirectory, asksaveasfilename
+from tkinter.filedialog import askopenfilename, askdirectory, asksaveasfilename, askopenfilenames
 from tkinter import ttk
 from ..plugin_loder import PluginLoader
 from ..plugin.BasePlugin import BasePlugin
@@ -18,12 +18,6 @@ class PluginProcessView(_ProcessView):
         super(PluginProcessView, self).__init__(window, control_button, params, name)
         self.plugin = self.params["plugin"]
         self.curr = 0
-
-    def transform(self, frame):
-        self.curr += 1
-        if not self.is_run:
-            return
-        return self.plugin.transform(frame)
 
     def _work(self):
         if not os.path.exists("./UserData/temp"):
@@ -104,6 +98,19 @@ class PluginParmaView(tk.Toplevel):
                 if v[1] == param_type.BOOLEAN:
                     value = (value == 1)
                 params[k] = value
+            elif isinstance(v[0], tk.StringVar):
+                value = v[0].get()
+                if v[1] == param_type.LIST_STR:
+                    value = str(value)
+                elif v[1] == param_type.LIST_INT:
+                    value = int(value)
+                elif v[1] == param_type.LIST_FLOAT:
+                    value = float(value)
+                params[k] = value
+            elif isinstance(v[0], (list, tuple)):
+                params[k] = v[0]
+            elif isinstance(v[0], str):
+                params[k] = v[0]
         return params
 
     def run(self):
@@ -144,11 +151,55 @@ class PluginParmaView(tk.Toplevel):
                                       height=4, width=10, font=(None, 10))
         x = len(name) * 10
         check_button.place(x=x, y=y - 20)
-        if info["default"]:
+        if info.get("default", None):
             check.set(1)
         else:
             check.set(0)
         self.register_params[name] = (check, info["type"])
+
+    def render_list(self, info):
+        y = (len(self.register_params) + 1) * 40
+        self.y_ = y + 40
+        name = info["name"]
+        label = tk.Label(self, text=name.replace("_", " ") + " :", font=(None, 10))
+        label.place(x=0, y=y)
+        choice = tk.StringVar()  # 先用string var存放,后转换类型
+        choice_list = ttk.Combobox(self, width=12, textvariable=choice)
+        choice_list['values'] = info["option"]
+        x = len(name) * 10
+        choice_list.current(info.get("default", 0))  # default value index
+        choice_list.place(x=x, y=y)
+        self.register_params[name] = (choice, info["type"])
+
+    def _get_open_file_func(self, info, label_):
+        type_ = info["type"]
+        name = info["name"]
+
+        def openfile(event):
+            if type_ == param_type.OPEN_FILE:
+                file_name = askopenfilenames(title="select a file")
+            if type_ == param_type.SAVE_FILE:
+                file_name = asksaveasfilename(title="select a file")
+            if type_ == param_type.DIR:
+                file_name = askdirectory(title="select a file")
+            label_["text"] = file_name
+            self.register_params[name] = [file_name, type_]
+
+        return openfile
+
+    def render_file(self, info):
+        y = (len(self.register_params) + 1) * 40
+        self.y_ = y + 40
+        name = info["name"]
+        label = tk.Label(self, text=name.replace("_", " ") + " :", font=(None, 10))
+        label.place(x=0, y=y)
+        x = len(name) * 10
+        label_ = tk.Label(self, text="", bg="white", width=50, height=1)
+        label_.place(x=x, y=y)
+        button1_ = tk.Button(self, text="...", height=1, width=3)
+        button1_.bind("<Button-1>", func=self._get_open_file_func(info, label_))
+        button1_.place(x=460, y=y)
+        self.register_params[name] = [None,info["type"]]
 
     def _render(self, render_info):
         for info in render_info:
@@ -157,11 +208,13 @@ class PluginParmaView(tk.Toplevel):
                 self.render_number(info)
             if type_ == param_type.BOOLEAN:
                 self.render_boolearn(info)
+            if type_ in [param_type.LIST_FLOAT, param_type.LIST_INT, param_type.LIST_STR]:
+                self.render_list(info)
+            if type_ in [param_type.DIR, param_type.OPEN_FILE, param_type.SAVE_FILE]:
+                self.render_file(info)
         self.button = tk.Button(self, text="Run", command=self.run)
         # button.bind("<Button-1>", func=run_extract_face)  # 1 左键 2 中 3 右
         self.button.place(x=420, y=self.y_ + 40, width=200)
-
-
 
 
 class PluginView:

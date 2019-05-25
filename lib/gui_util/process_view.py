@@ -14,7 +14,7 @@ class _ProcessView(tk.Toplevel):
     # 显示进度的子窗口
     def __init__(self, window, control_button, params, name):
         super(_ProcessView, self).__init__(window)
-        self.title("RabbitVE FaceExtract")
+        self.title("RabbitVE")
         self.geometry("450x50")
         self.control_button = control_button
         self.control_button.config(state="disable")

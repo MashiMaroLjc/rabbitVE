@@ -25,3 +25,6 @@ sort_type:
   - "none"
   - "hist"
 
+plugin_list:
+  - "Cartoonlization"
+  - "FaceBan"

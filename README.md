@@ -1,6 +1,6 @@
 # RabbitVE  :rabbit2:
- ![Badge](https://img.shields.io/badge/-rabbitVE-blue.svg?style=flat-square)![Badge](https://img.shields.io/badge/License-GPT3.0-green.svg?style=flat-square)![Badge](https://img.shields.io/badge/AI-VideoEdit-yellow.svg?style=flat-square)[![Badge](https://img.shields.io/badge/link-996.icu-%23FF4D5B.svg?style=flat-square)](https://996.icu/#/en_US)
-=======
+
+#  ![Badge](https://img.shields.io/badge/-rabbitVE-blue.svg?style=flat-square)![Badge](https://img.shields.io/badge/License-GPT3.0-green.svg?style=flat-square)![Badge](https://img.shields.io/badge/AI-VideoEdit-yellow.svg?style=flat-square)[![Badge](https://img.shields.io/badge/link-996.icu-%23FF4D5B.svg?style=flat-square)](https://996.icu/#/en_US)
 
 
 
@@ -24,7 +24,7 @@
 
 
 
-----
+------
 
 ## 中文版
 
@@ -50,16 +50,16 @@ rabbitVE是一个意图使用AI技术进行视频编辑的软件，目前还在�
 
 - 脸部抽取，建立人脸数据库（需要人工对抽取结果进行选择保留）
 
-  <img src="./doc/1.png" width="500" height=600  div align=center />
+  <img src="D:/github/rabbitVE/doc/1.png" width="500" height=600  div align=center />
 
   用户需要在 1中**先**勾选输入时图片还是视频（否则无法进行2），然后点击2，分别选择输入图片/视频（可多选），然后选择目录存放识别结果。3是确认检测的物体是否为人脸的阈值，取值是（0-1），越大越严格。
 
   4是是否对识别的图片进行相似度排序，方便人工选择。默认为none，不排序。其余为排序的方式。建议选择hist进行排序。
   最后点击run，就可以去喝咖啡了。
-  
+
 - 视频智能分割（需要人工对剪辑视频结果进行排除）
 
-  <img src="./doc/2.png" width="500" height=600  div align=center />
+  <img src="D:/github/rabbitVE/doc/2.png" width="500" height=600  div align=center />
 
   1为文件输入输出设定，其中注意的是，**Face Database**是目标人脸存储的地方，即上一步的抽取目录。其中如果勾选learn，程序会对Face Databse的数据进行学习，并保存学习结果（覆盖式保存，需要的话请保存副本）。如果已经学习了一次，且Face Database没有变更，即不需要勾选。如果你需要的是杨超越的数据，在model文件下也已经提供了一个，并不需要再学习。
 
@@ -71,18 +71,20 @@ rabbitVE是一个意图使用AI技术进行视频编辑的软件，目前还在�
 
 - 分割视频进行合并
 
-<img src="./doc/3.png" width="500" height=600  div align=center />
+<img src="D:/github/rabbitVE/doc/3.png" width="500" height=600  div align=center />
 
 通过1来选择需要合拼的视频的目录，即上一步的Output Dir，合拼的视频需要有共同的前缀和共同后缀。通过2来选择合拼视频的格式。
 
 - 开发自己的插件
-- <img src="./doc/4.png" width="800" height=600  div align=center />
+- <img src="D:/github/rabbitVE/doc/4.png" width="800" height=600  div align=center />
 
 rabbitVE支持用户开发自己的插件。通过2来选定插件，然后点击Load载入。插件需要提供```initialize```，```render_info```,```transform```接口，rabbitVE会通过```render_info```来字段绘制简易的GUI（上图右窗口），在插件运行读取每一帧并调用```transform```，用户需要在```transform```完成图片的转换和处理。下面以OpenCV自带的工具实现图像卡通化，为例，简述如何实现一个插件。未来会提供智能马赛克等手段，也会通过此机制实现。
 
-<img src="./doc/plugin_code.png" width="1000" height=600  div align=center />
+<img src="D:/github/rabbitVE/doc/plugin_code.png" width="1000" height=600  div align=center />
 
 插件的运行机制是：载入插件---> 通过```__import__```导入python对象并实例化 ---- >根据```render_info```绘制GUI --- > 填写参数，运行插件 ----> 通过```transform```接口修改每一帧，保存处理后的视频。
+
+编写插件后需要在```config.yaml```上修改```plugin_list```字段。同时class名字和文件文字需要保持一致。
 
 ### :star2:Demo：
 
@@ -94,9 +96,19 @@ rabbitVE支持用户开发自己的插件。通过2来选定插件，然后点�
 
 - 卡通化插件效果
 
-  ![cartoon](./doc/1.gif)
+  ![cartoon](D:/github/rabbitVE/doc/1.gif)
+
   
+
+- 智能马赛克效果
+
+  ![origin](D:/github/rabbitVE%20-%20%E5%89%AF%E6%9C%AC/doc/origin.gif)
+
   
+
+  ![ban](D:/github/rabbitVE%20-%20%E5%89%AF%E6%9C%AC/doc/ban1.gif)
+
+
 
 ### :couple:运行环境
 
@@ -116,8 +128,6 @@ rabbitVE支持用户开发自己的插件。通过2来选定插件，然后点�
 - tool_extract.py 可以从视频或图片集上剪裁人脸，并输出在指定的目录里（face database）
 - tool_sort.py 对剪裁出来的人脸根据某一相似度量方法排序并输出，方便用于在剪裁后的人脸进行人工去重或剔除无关样本。
 - tool_merge.py 对从视频上剪辑出来的片段按顺序合成。
-
-目前不同功能以单个脚本的形式存在，迟点会整合和各功能插件化，至于GUI会视项目发展情况来决定是否添加。
 
 ### :runner:未来
 
