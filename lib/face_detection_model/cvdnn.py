@@ -13,7 +13,6 @@ class CVDNN(BaseDetector):
         self.net = cv2.dnn.readNetFromCaffe(proto, caffemodel)
 
     def detection(self, frame):
-        #### https: // blog.csdn.net / github_39611196 / article / details / 85307457
         frameOpenCVDnn = frame.copy()
         frameHeight = frameOpenCVDnn.shape[0]
         frameWidth = frameOpenCVDnn.shape[1]
@@ -29,6 +28,18 @@ class CVDNN(BaseDetector):
                 y1 = int(detections[0, 0, i, 4] * frameHeight)
                 x2 = int(detections[0, 0, i, 5] * frameWidth)
                 y2 = int(detections[0, 0, i, 6] * frameHeight)
+                # 太扁了,影响检测，整合到一个合适的尺寸
+                dx = x2 - x1
+                dy = y2 - y1
+                center_x = (x1 + x2) // 2
+                center_y = (y1 + y2) // 2
+                max_size = max([dx,dy])
+                step = max_size // 2
+                x1 = center_x - step
+                x2 = center_x + step
+                y1 = center_y - step
+                y2 = center_y + step
+                ###########################
                 bboxes.append([y1, x2, y2, x1])
                 cv2.rectangle(frameOpenCVDnn, (x1, y1), (x2, y2), (0, 255, 0), int(frameHeight / 150), 8)
                 # cv2.rectangle(frameDraw, (left, top), (right, bottom), (0, 255, 0), int(frameHeight / 150), 8)

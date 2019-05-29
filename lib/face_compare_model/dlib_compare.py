@@ -30,5 +30,6 @@ class DLIBCOMPARE(BaseCompare):
         res_list = []
         for temp_ in temp:
             res = face_recognition.compare_faces(self.img_encode_code, temp_, tolerance=self.conf_threshold)  # 越小越好
+            # res 一个bool 的向量
             res_list.append(res)
         return np.sum(res_list) > 0, res_list

@@ -40,12 +40,14 @@ class ExtractFaceProcess(_ProcessView):
             os.makedirs(out_dir)
         if video:
             for path in self.params["input"]:
+                if not self.is_run:
+                    break
                 videoCapture = cv2.VideoCapture(path)
                 total_frame_number = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
                 self.total_size = total_frame_number
                 success, img = videoCapture.read()
                 frame_count = 0
-                while success:
+                while success and self.is_run:
                     frame_count += 1
                     self.curr = frame_count + 1
                     img, faces = detect_face(img, model, max_v)
@@ -61,6 +63,8 @@ class ExtractFaceProcess(_ProcessView):
             img_list = self.params["input"]
             self.total_size = len(img_list)
             for i, ip in enumerate(img_list):
+                if not self.is_run:
+                    break
                 self.curr = i + 1
                 img = cv2.imread(ip)
                 img, faces = detect_face(img, model, max_v)
