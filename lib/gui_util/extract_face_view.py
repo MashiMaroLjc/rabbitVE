@@ -13,12 +13,14 @@ from .. import face_detection
 import cv2
 import os
 from .process_view import _ProcessView
+from lib.align import aliner_instance
 
 
 class ExtractFaceProcess(_ProcessView):
     # 显示进度的子窗口
     def __init__(self, window, control_button, params):
         super(ExtractFaceProcess, self).__init__(window, control_button, params, "Extract..")
+        self.aligner = aliner_instance
 
     def _work(self):
         max_v = int(self.params['max_size'])
@@ -45,7 +47,7 @@ class ExtractFaceProcess(_ProcessView):
                 videoCapture = cv2.VideoCapture(path)
                 total_frame_number = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
                 self.total_size = total_frame_number
-                success, img = videoCapture.read()
+                success, frame = videoCapture.read()
                 frame_count = 0
                 while success and self.is_run:
                     frame_count += 1
@@ -54,9 +56,10 @@ class ExtractFaceProcess(_ProcessView):
                     if len(faces) < 1:
                         continue
                     for (top, right, bottom, left) in faces:
-                        img_cut = img[top:bottom, left:right]
+                        # img_cut = img[top:bottom, left:right]
+                        face_cut = self.aligner.align(frame, [left, top, right, bottom])
                         new_path = os.path.join(out_dir, "{}.png".format(img_ids))
-                        cv2.imwrite(new_path, img_cut)
+                        cv2.imwrite(new_path, face_cut)
                         img_ids += 1
                     success, frame = videoCapture.read()
         else:

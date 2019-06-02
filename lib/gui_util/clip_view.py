@@ -13,6 +13,7 @@ import subprocess
 import os
 from queue import Queue
 from .process_view import _ProcessView
+from lib.align import aliner_instance
 
 
 class ClipProcess(_ProcessView):
@@ -21,6 +22,7 @@ class ClipProcess(_ProcessView):
         super(ClipProcess, self).__init__(window, control_button, params, "")
         self.cut_index = []
         self.image_queue = Queue()
+        self.aligner = aliner_instance
 
     def get_reader(self, videoCapture, per_frame):
         def reader():
@@ -53,7 +55,8 @@ class ClipProcess(_ProcessView):
                 if len(bboxes) > 0:
                     face_list = []
                     for (top, right, bottom, left) in bboxes:
-                        face_cut = frame[top:bottom, left:right]
+                        # face_cut = frame[top:bottom, left:right]
+                        face_cut = self.aligner.align(frame, [left, top, right, bottom])
                         face_list.append(face_cut)
                     has_target_face, score = compare_tool.compare(face_list)
                     if cur_index[0] == -1 and has_target_face:
@@ -121,6 +124,7 @@ class ClipProcess(_ProcessView):
             if not os.path.exists(encode_path) or encode:
                 encode_path = None
             compare_tool = face_compare.FaceCompare(None, face_database,
+                                                    save_path="./model/encode_result.pkl",
                                                     encode_path=encode_path,
                                                     conf_threshold=fst, gui=self)
         else:

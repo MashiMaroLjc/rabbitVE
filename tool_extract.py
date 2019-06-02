@@ -1,11 +1,11 @@
-import os
-import cv2
-from lib import face_detection
 import argparse
-from util import detect_face
+import os
 
+import cv2
 
-
+from lib import face_detection
+from lib.util import detect_face
+from lib.align import cvdnn as align_cvdnn
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -20,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument("-tf", help="threshold of detect the face", type=float, default=0.5)
     parser.add_argument("-max_size", help="the max size of height or width of input image(defaule:1080)",
                         type=int, default=1080)
+    parser.add_argument("-align", help="alignment", choices=("cvdnn","none"),
+                        type=str, default="cvdnn")
     args = parser.parse_args()
 
     max_v = args.max_size
@@ -34,6 +36,10 @@ if __name__ == "__main__":
         print("Use {} threshold.{}".format(args.d, args.tf))
         model = face_detection.FaceDetection(None, conf_threshold=args.tf,
                                              model=args.d)
+    if args.align == "cvdnn":
+        aligner = align_cvdnn.CVDNN()
+    else:
+        aligner = None
     img_ids = 0
     if not os.path.exists(args.target):
         os.makedirs(args.target)
@@ -48,7 +54,11 @@ if __name__ == "__main__":
             if len(faces) < 1:
                 continue
             for (top, right, bottom, left) in faces:
-                img_cut = img[top:bottom, left:right]
+                if aligner is not None:
+                    img_cut = aligner.align(img,[left, top, right, bottom])
+                else:
+                    img_cut = img[top:bottom, left:right]
+                    img_cut = cv2.resize(img_cut, (128, 128))
                 new_path = os.path.join(out_dir, "{}.png".format(img_ids))
                 cv2.imwrite(new_path, img_cut)
                 img_ids += 1
@@ -64,7 +74,13 @@ if __name__ == "__main__":
                 print("Image {} can't find a face".format(ip))
                 continue
             for (top, right, bottom, left) in faces:
-                img_cut = img[top:bottom, left:right]
+                if aligner is not None:
+                    img_cut = aligner.align(img,[left, top, right, bottom])
+                else:
+                    # print((top, right, bottom, left))
+                    img_cut = img[top:bottom, left:right]
+                    # print(img_cut.shape)
+                    img_cut = cv2.resize(img_cut, (128, 128))
                 new_path = os.path.join(out_dir, "{}.png".format(img_ids))
                 print("Image save in {}".format(new_path))
                 cv2.imwrite(new_path, img_cut)

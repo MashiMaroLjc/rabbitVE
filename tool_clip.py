@@ -2,31 +2,41 @@
 # 剪辑视频
 #
 
-
-import cv2
-import subprocess
-import command
-import time
-import numpy as np
-from lib import face_detection, face_compare
-from util import *
-import threading
-from queue import Queue
+from lib.align import aliner_instance
 import argparse
 import os
-from util import detect_face
+import subprocess
+import threading
+import time
+import signal
+from queue import Queue
+
+import numpy as np
+
+import command
+from lib import face_detection, face_compare
+from lib.util import *
+from lib.util import detect_face
 
 # 图片队列,用于reader 和 worker的线程通信
 image_q = Queue()
 # 结果队列,用于主线程 和 worker的线程通信
 result_q = Queue()
+aligner = aliner_instance
+is_run = True
+
+
+def handler(a, b):
+    global is_run
+    is_run = False
+    print("ctrl -c exit")
 
 
 def get_reader(videoCapture, per_frame):
     def reader():
         frame_count = 0
         success, frame = videoCapture.read()
-        while success:
+        while success and is_run:
             if (frame_count + 1) % per_frame == 0:
                 image_q.put((frame, frame_count))
             frame_count += 1
@@ -47,24 +57,25 @@ def get_worker(model, compare_tool, max_v, total_frame_num, fps, no_strict, stri
         cur_index = [-1, -1]
         frame, frame_count = image_q.get()
         last_frame = None
-        while frame_count > -1:
-            print(">>> Deal {}/{} frame.... ".format(frame_count, total_frame_num))
+        while frame_count > -1 and is_run:
+            print(" # Deal {}/{} frame.... ".format(frame_count, total_frame_num))
             _, bboxes = detect_face(frame.copy(), model, max_v)
             # _, bboxes = model.detecte(frame)
             if len(bboxes) > 0:
                 face_list = []
                 for (top, right, bottom, left) in bboxes:
-                    face_cut = frame[top:bottom, left:right]
+                    # face_cut = frame[top:bottom, left:right]
+                    face_cut = aligner.align(frame, [left, top, right, bottom])
                     face_list.append(face_cut)
                 has_target_face, score = compare_tool.compare(face_list)
                 if cur_index[0] == -1 and has_target_face:
-                    print(">>> Find a target Face .... ")
+                    print("# Find a target Face .... ")
                     if debug:
                         bboxes = np.array(bboxes)
                         for (top, right, bottom, left), s in zip(bboxes, score):
-                            if np.sum(score) > 0:
+                            if np.sum(s) > 0:
                                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), int(720 / 150), 8)
-                            cv2.imwrite("./test/target_face/{}.png".format(frame_count), frame)
+                                cv2.imwrite("./test/target_face/{}_{:.3f}.png".format(frame_count, np.sum(s)), frame)
                     cur_index[0] = int((frame_count - 2) / fps)  # 平滑
                     last_frame = frame.copy()
                 elif not has_target_face:
@@ -94,6 +105,9 @@ def get_worker(model, compare_tool, max_v, total_frame_num, fps, no_strict, stri
 
     return worker
 
+
+signal.signal(signal.SIGINT, handler)
+signal.signal(signal.SIGTERM, handler)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -146,8 +160,9 @@ if __name__ == "__main__":
         encode_path = "./model/encode_result.pkl"
         if not os.path.exists(encode_path) or args.encode:
             encode_path = None
-            print("# Encode the face ...")
+            print(">>> Encode the face ...")
         compare_tool = face_compare.FaceCompare(None, args.face_database,
+                                                save_path="./model/encode_result.pkl",
                                                 encode_path=encode_path,
                                                 conf_threshold=args.tc)
     else:
@@ -158,34 +173,44 @@ if __name__ == "__main__":
     print(">>> fps", fps)
     print(">>> use strict :{}".format(args.no_strict == False))
     t1 = threading.Thread(target=get_reader(videoCapture, args.per_frame))
+    t1.setDaemon(True)
     t1.start()
     t2 = threading.Thread(
         target=get_worker(model, compare_tool, max_v, total_frame_num, fps, args.no_strict, args.ts, args.debug))
+    t2.setDaemon(True)
     t2.start()
-    t2.join()  # 主线程等待t2结束
-    print(">>> Finish Deal.")
-    cut_index = result_q.get()
-    finall_index = []  # 合并cutindex
+    is_t2_alive = True
+    while is_t2_alive:
+        is_t2_alive = t2.isAlive()
+        if is_run:
+            time.sleep(60)
+    if is_run:
+        # 正常结束
+        print(">>> Finish Deal.")
+        cut_index = result_q.get()
+        finall_index = []  # 合并cutindex 和去掉一些很小的index
 
-    for index in cut_index:
-        if len(finall_index) == 0:
-            finall_index.append(index)
-        else:
-            end = finall_index[-1][1]
-            begin = index[0]
-            if begin - end < args.tcut:
-                finall_index[-1][1] = index[1]  # 合并
-            else:
+        for index in cut_index:
+            print("index: ",index)
+            if len(finall_index) == 0:
                 finall_index.append(index)
+            # elif index[1] - index[0] < 3:
+            #     continue
+            else:
+                end = finall_index[-1][1]
+                begin = index[0]
+                if begin - end < args.tcut:
+                    finall_index[-1][1] = index[1]  # 合并
+                else:
+                    finall_index.append(index)
 
-    for i, index in enumerate(finall_index):
-        begin, end = index
-        begin = second_format(begin)
-        end = second_format(end)
-        if begin == -1:
-            continue
-        command_inp = command.video_cut.format(begin, end, args.path, "{}/cut_{}.mp4".format(out_dir, i))
-        print(command_inp)
-        process = subprocess.Popen(command_inp)
-        process.wait()
-    print(">>> Done.")    
+        for i, index in enumerate(finall_index):
+            begin, end = index
+            begin = second_format(begin)
+            end = second_format(end)
+            if begin == -1:
+                continue
+            command_inp = command.video_cut.format(begin, end, args.path, "{}/cut_{}.mp4".format(out_dir, i))
+            print(command_inp)
+            process = subprocess.Popen(command_inp)
+            process.wait()
