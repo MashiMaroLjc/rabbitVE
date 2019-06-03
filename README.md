@@ -20,7 +20,7 @@
 >
 > But there is still a long way to go.
 >
-> Thank for you watching and  giving me a start.
+> Thank for you watching and  giving me a star.
 
 
 
